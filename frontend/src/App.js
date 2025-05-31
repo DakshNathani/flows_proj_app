@@ -1,8 +1,15 @@
-// frontend/src/App.js - Updated version with backend connection
+// frontend/src/App.js - Updated for deployment
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
+  // API URL - automatically switches between development and production
+  const API_URL = process.env.REACT_APP_API_URL || 
+    (process.env.NODE_ENV === 'production' 
+      ? 'https://chatbot-backend-ehwp.onrender.com'  // Replace with your Render URL
+      : 'http://localhost:5000'
+    );
+
   // State to store all messages
   const [messages, setMessages] = useState([
     {
@@ -22,7 +29,9 @@ function App() {
   // Function to send message to backend
   const sendMessageToBackend = async (message) => {
     try {
-      const response = await fetch('http://localhost:5000/api/message', {
+      console.log('Sending to:', `${API_URL}/api/message`); // For debugging
+      
+      const response = await fetch(`${API_URL}/api/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,14 +40,14 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       return data.response;
     } catch (error) {
       console.error('Error sending message:', error);
-      return 'Sorry, I encountered an error. Please try again.';
+      return 'Sorry, I encountered an error connecting to the server. Please try again.';
     }
   };
 
@@ -97,6 +106,10 @@ function App() {
             <h2 className="mb-1">🤖 AI Chatbot</h2>
             <small className="text-light">
               {isLoading ? 'AI is thinking...' : 'Powered by GROQ AI'}
+            </small>
+            {/* Show environment info for debugging */}
+            <small className="d-block mt-1" style={{fontSize: '10px', opacity: 0.7}}>
+              {process.env.NODE_ENV === 'production' ? 'Production' : 'Development'} Mode
             </small>
           </div>
           
