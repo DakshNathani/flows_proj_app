@@ -1,4 +1,4 @@
-// backend/server.js
+// backend/server.js - Updated for deployment
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -9,12 +9,28 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors()); // Allow cross-origin requests from React app
-app.use(express.json()); // Parse JSON request bodies
+// Updated CORS for production
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || 'https://your-app-name.vercel.app'] 
+    : ['http://localhost:3000'],
+  credentials: true
+}));
 
-// Basic route to test server
+app.use(express.json());
+
+// Health check route
 app.get('/', (req, res) => {
-  res.json({ message: 'Chatbot Backend Server is running!' });
+  res.json({ 
+    message: 'Chatbot Backend Server is running!',
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check for monitoring services
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', uptime: process.uptime() });
 });
 
 // POST route to handle chat messages
@@ -66,8 +82,8 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`Test the API at: http://localhost:${PORT}/api/message`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
